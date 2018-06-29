@@ -181,7 +181,7 @@ void GPhotoCameraWorker::capturePreview()
 
     }
 
-    emit previewCaptured(result);
+    emit previewCaptured(result.mirrored(true, false));
 }
 
 void GPhotoCameraWorker::capturePhoto(int id, const QString &fileName)
