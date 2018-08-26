@@ -118,12 +118,12 @@ void GPhotoCameraWorker::closeCamera()
     // Close GPhoto camera session
     int ret = gp_camera_exit(m_camera, m_context);
     if (ret != GP_OK) {
-        m_status = QCamera::LoadedStatus;
-        emit statusChanged(m_status);
+        //m_status = QCamera::LoadedStatus;
+        //emit statusChanged(m_status);
 
         qWarning() << "Unable to close camera";
         emit error(QCamera::CameraError, tr("Unable to close camera"));
-        return;
+        //return;
     }
 
     gp_file_free(m_file);
