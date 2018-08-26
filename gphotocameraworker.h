@@ -37,7 +37,7 @@ public slots:
 private:
     const CameraAbilities m_abilities;
     const PortInfo m_portInfo;
-    GPContext *const m_context;
+    GPContext* m_context;
     Camera *m_camera;
     CameraFile *m_file;
     int m_capturingFailCount;

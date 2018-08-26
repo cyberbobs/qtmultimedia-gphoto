@@ -68,6 +68,9 @@ void GPhotoCameraWorker::openCamera()
     if (m_camera)
         return;
 
+    if (m_context)
+        m_context = gp_context_new();
+
     m_status = QCamera::LoadingStatus;
     emit statusChanged(m_status);
 
@@ -121,6 +124,8 @@ void GPhotoCameraWorker::closeCamera()
         //m_status = QCamera::LoadedStatus;
         //emit statusChanged(m_status);
 
+        gp_context_unref(m_context);
+
         qWarning() << "Unable to close camera";
         emit error(QCamera::CameraError, tr("Unable to close camera"));
         //return;
@@ -128,7 +133,7 @@ void GPhotoCameraWorker::closeCamera()
 
     gp_file_free(m_file);
     m_file = 0;
-    gp_camera_free(m_camera);
+    gp_camera_unref(m_camera); //gp_camera_free(m_camera); is depricated function
     m_camera = 0;
     m_status = QCamera::UnloadedStatus;
     emit statusChanged(m_status);
