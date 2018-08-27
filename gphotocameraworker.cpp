@@ -64,12 +64,13 @@ GPhotoCameraWorker::~GPhotoCameraWorker()
 
 void GPhotoCameraWorker::openCamera()
 {
+    //check if context lost
+    if (m_context)
+        m_context = gp_context_new();
+
     // Camera is already open
     if (m_camera)
         return;
-
-    if (m_context)
-        m_context = gp_context_new();
 
     m_status = QCamera::LoadingStatus;
     emit statusChanged(m_status);
@@ -99,6 +100,16 @@ void GPhotoCameraWorker::openCamera()
         return;
     }
 
+    // disable power save for Canon cameras
+    if(parameter("capture").isValid())
+    {
+        if(!setParameter("capture", true))
+            qWarning() << "Unable to set option 'capture' to 'true'";
+    }
+    else
+        qWarning() << "Unknown parameter 'capture'";
+
+
     if (parameter("viewfinder").isValid()) {
         if (!setParameter("viewfinder", true))
             qWarning() << "Failed to flap up camera mirror";
@@ -125,6 +136,7 @@ void GPhotoCameraWorker::closeCamera()
         //emit statusChanged(m_status);
 
         gp_context_unref(m_context);
+        m_context = 0;
 
         qWarning() << "Unable to close camera";
         emit error(QCamera::CameraError, tr("Unable to close camera"));
