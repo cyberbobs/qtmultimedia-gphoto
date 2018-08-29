@@ -2,6 +2,7 @@
 #define GPHOTOCAMERAWORKER_H
 
 #include <QObject>
+#include <QTimer>
 #include <gphoto2/gphoto2-camera.h>
 #include "gphotocamerasession.h"
 #include "gphotofactory.h"
@@ -41,6 +42,8 @@ private:
     Camera *m_camera;
     CameraFile *m_file;
     int m_capturingFailCount;
+
+    QTimer m_aliveTimer;
 
     QCamera::Status m_status;
 

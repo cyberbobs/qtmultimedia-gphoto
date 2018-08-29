@@ -1,6 +1,7 @@
 #include "gphotocameraworker.h"
 
 #include <QCameraImageCapture>
+#include <QMetaObject>
 
 namespace {
   const int capturingFailLimit = 10;
@@ -53,6 +54,9 @@ GPhotoCameraWorker::GPhotoCameraWorker(const CameraAbilities &abilities, const P
 {
     if (!m_context)
         m_status = QCamera::UnavailableStatus;
+
+    m_aliveTimer.setInterval(1000 * 60); //trigger parameter "capture" for canon cameras every minute
+    m_aliveTimer.setSingleShot(true);
 }
 
 GPhotoCameraWorker::~GPhotoCameraWorker()
@@ -105,6 +109,8 @@ void GPhotoCameraWorker::openCamera()
     {
         if(!setParameter("capture", true))
             qWarning() << "Unable to set option 'capture' to 'true'";
+
+        QMetaObject::invokeMethod(&m_aliveTimer, "start", Qt::QueuedConnection);
     }
     else
         qWarning() << "Unknown parameter 'capture'";
@@ -171,6 +177,20 @@ void GPhotoCameraWorker::capturePreview()
     QImage result;
     gp_file_clean(m_file);
 
+    if(!m_aliveTimer.isActive())
+    {
+        QVariant captureParameter = parameter("capture");
+        if(captureParameter.isValid())
+        {
+            if(captureParameter.toBool() == false)
+            {
+                setParameter("capture", true);
+                qWarning() << "Set parameter 'capture' to 'true'";
+            }
+        }
+        QMetaObject::invokeMethod(&m_aliveTimer, "start", Qt::QueuedConnection);
+    }
+
     int ret = gp_camera_capture_preview(m_camera, m_file, m_context);
     if (ret < GP_OK) {
         qWarning() << "Failed retrieving preview" << ret;
@@ -204,6 +224,8 @@ void GPhotoCameraWorker::capturePreview()
 void GPhotoCameraWorker::capturePhoto(int id, const QString &fileName)
 {
     QByteArray result;
+
+    QMetaObject::invokeMethod(&m_aliveTimer, "start", Qt::QueuedConnection);
 
     // Focusing
     if (parameter("viewfinder").isValid()) {
