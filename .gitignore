@@ -1,39 +1,74 @@
-# C++ objects and libs
-
-*.slo
-*.lo
-*.o
-*.a
-*.la
-*.lai
-*.so
-*.so.*
-*.dll
-*.dylib
-
-# Temporary files
+# This file is used to ignore files which are generated
+# ----------------------------------------------------------------------------
 
 *~
-
-# Qt-es
-
-moc_*.cpp
+*.autosave
+*.a
+*.core
+*.moc
+*.o
+*.obj
+*.orig
+*.rej
+*.so
+*.so.*
+*_pch.h.cpp
+*_resource.rc
+*.qm
+.#*
+*.*#
+core
+!core/
+tags
+.DS_Store
+.directory
+*.debug
+Makefile*
+*.prl
+*.app
+moc_*
+ui_*.h
 qrc_*.cpp
-*-build-*
+Thumbs.db
+*.res
+*.rc
+/.qmake.cache
+/.qmake.stash
 
-# CMake and qmake
+# qtcreator generated files
+*.pro.user*
+CMakeLists.txt.user*
 
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-Makefile
+# xemacs temporary files
+*.flc
 
-# Generated doxygen documentation
+# Vim temporary files
+.*.swp
 
-doc/
+# Visual Studio generated files
+*.ib_pdb_index
+*.idb
+*.ilk
+*.pdb
+*.sln
+*.suo
+*.vcproj
+*vcproj.*.*.user
+*.ncb
+*.sdf
+*.opensdf
+*.vcxproj
+*vcxproj.*
 
-# IDE
+# MinGW generated files
+*.Debug
+*.Release
 
-*.pro.user
-*.pro.user.*
-CMakeLists.txt.user
+# Python byte code
+*.pyc
+
+# Binaries
+# --------
+*.dll
+*.exe
+

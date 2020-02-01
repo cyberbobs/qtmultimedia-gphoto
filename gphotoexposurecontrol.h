@@ -5,23 +5,32 @@
 
 class GPhotoCameraSession;
 
-class GPhotoExposureControl : public QCameraExposureControl
+class GPhotoExposureControl final : public QCameraExposureControl
 {
     Q_OBJECT
 public:
-    explicit GPhotoExposureControl(GPhotoCameraSession *session, QObject *parent = 0);
+    explicit GPhotoExposureControl(GPhotoCameraSession *session, QObject *parent = nullptr);
+    ~GPhotoExposureControl() = default;
 
-    QVariant actualValue(ExposureParameter parameter) const;
-    bool isParameterSupported(ExposureParameter parameter) const;
-    QVariant requestedValue(ExposureParameter parameter) const;
-    bool setValue(ExposureParameter parameter, const QVariant &value);
-    QVariantList supportedParameterRange(ExposureParameter parameter, bool *continuous) const;
+    GPhotoExposureControl(GPhotoExposureControl&&) = delete;
+    GPhotoExposureControl& operator=(GPhotoExposureControl&&) = delete;
+
+    QVariant actualValue(ExposureParameter parameter) const final;
+    bool isParameterSupported(ExposureParameter parameter) const final;
+    QVariant requestedValue(ExposureParameter parameter) const final;
+    bool setValue(ExposureParameter parameter, const QVariant &value) final;
+    QVariantList supportedParameterRange(ExposureParameter parameter, bool *continuous) const final;
 
 private slots:
     void stateChanged(QCamera::State);
 
 private:
-    GPhotoCameraSession *m_session;
+    Q_DISABLE_COPY(GPhotoExposureControl)
+
+    static QVariant convertShutterSpeed(const QVariant &value);
+    static QVariantList convertShutterSpeeds(const QVariantList &values, bool removeInvalids = true);
+
+    GPhotoCameraSession *const m_session;
     QMap<QCameraExposureControl::ExposureParameter, QVariant> m_requestedValues;
 
     QCamera::State m_state;

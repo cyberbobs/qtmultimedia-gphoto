@@ -5,11 +5,14 @@ GPhotoCameraImageCaptureControl::GPhotoCameraImageCaptureControl(GPhotoCameraSes
     : QCameraImageCaptureControl(parent)
     , m_session(session)
 {
-    connect(m_session, SIGNAL(imageCaptureError(int,int,QString)), SIGNAL(error(int,int,QString)));
-    connect(m_session, SIGNAL(imageCaptured(int,QImage)), SIGNAL(imageCaptured(int,QImage)));
-    connect(m_session, SIGNAL(imageAvailable(int,QVideoFrame)), SIGNAL(imageAvailable(int,QVideoFrame)));
-    connect(m_session, SIGNAL(imageSaved(int,QString)), SIGNAL(imageSaved(int,QString)));
-    connect(m_session, SIGNAL(readyForCaptureChanged(bool)), SIGNAL(readyForCaptureChanged(bool)));
+    using Session = GPhotoCameraSession;
+    using Control = GPhotoCameraImageCaptureControl;
+
+    connect(m_session, &Session::imageAvailable, this, &Control::imageAvailable);
+    connect(m_session, &Session::imageCaptured, this, &Control::imageCaptured);
+    connect(m_session, &Session::imageCaptureError, this, &Control::error);
+    connect(m_session, &Session::imageSaved, this, &Control::imageSaved);
+    connect(m_session, &Session::readyForCaptureChanged, this, &Control::readyForCaptureChanged);
 }
 
 QCameraImageCapture::DriveMode GPhotoCameraImageCaptureControl::driveMode() const

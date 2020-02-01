@@ -1,11 +1,15 @@
 #ifndef GPHOTOSERVICEPLUGIN_H
 #define GPHOTOSERVICEPLUGIN_H
 
-#include <qmediaserviceproviderplugin.h>
+#include <memory>
 
-class GPhotoFactory;
+#include <QMediaServiceDefaultDeviceInterface>
+#include <QMediaServiceProviderPlugin>
+#include <QMediaServiceSupportedDevicesInterface>
 
-class GPhotoServicePlugin
+class GPhotoController;
+
+class GPhotoServicePlugin final
     : public QMediaServiceProviderPlugin
     , public QMediaServiceSupportedDevicesInterface
     , public QMediaServiceDefaultDeviceInterface
@@ -15,20 +19,25 @@ class GPhotoServicePlugin
     Q_INTERFACES(QMediaServiceDefaultDeviceInterface)
     Q_PLUGIN_METADATA(IID "org.qt-project.qt.mediaserviceproviderfactory/5.0" FILE "gphoto.json")
 public:
-    GPhotoServicePlugin();
-    ~GPhotoServicePlugin();
+    GPhotoServicePlugin() = default;
+    ~GPhotoServicePlugin() = default;
 
-    QMediaService* create(const QString &key);
-    void release(QMediaService *service);
+    GPhotoServicePlugin(GPhotoServicePlugin&&) = delete;
+    GPhotoServicePlugin& operator=(GPhotoServicePlugin&&) = delete;
 
-    QByteArray defaultDevice(const QByteArray &service) const;
-    QList<QByteArray> devices(const QByteArray &service) const;
-    QString deviceDescription(const QByteArray &service, const QByteArray &device);
+    QMediaService* create(const QString &key) final;
+    void release(QMediaService *service) final;
+
+    QByteArray defaultDevice(const QByteArray &service) const final;
+    QList<QByteArray> devices(const QByteArray &service) const final;
+    QString deviceDescription(const QByteArray &service, const QByteArray &device) final;
 
 private:
-    GPhotoFactory* factory() const;
+    Q_DISABLE_COPY(GPhotoServicePlugin)
 
-    mutable GPhotoFactory *m_factory;
+    std::weak_ptr<GPhotoController> getController() const;
+
+    mutable std::shared_ptr<GPhotoController> m_controller;
 };
 
 #endif // GPHOTOSERVICEPLUGIN_H

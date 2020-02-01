@@ -5,8 +5,10 @@ GPhotoCameraCaptureDestinationControl::GPhotoCameraCaptureDestinationControl(GPh
     : QCameraCaptureDestinationControl(parent)
     , m_session(session)
 {
-    connect(m_session, SIGNAL(captureDestinationChanged(QCameraImageCapture::CaptureDestinations)),
-            SIGNAL(captureDestinationChanged(QCameraImageCapture::CaptureDestinations)));
+    using Session = GPhotoCameraSession;
+    using Control = GPhotoCameraCaptureDestinationControl;
+
+    connect(m_session, &Session::captureDestinationChanged, this, &Control::captureDestinationChanged);
 }
 
 bool GPhotoCameraCaptureDestinationControl::isCaptureDestinationSupported(QCameraImageCapture::CaptureDestinations destination) const

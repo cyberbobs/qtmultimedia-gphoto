@@ -1,5 +1,5 @@
-#include "gphotovideorenderercontrol.h"
 #include "gphotocamerasession.h"
+#include "gphotovideorenderercontrol.h"
 
 GPhotoVideoRendererControl::GPhotoVideoRendererControl(GPhotoCameraSession *session, QObject *parent)
     : QVideoRendererControl(parent)

@@ -1,21 +1,28 @@
 #ifndef GPHOTOCAMERASESSION_H
 #define GPHOTOCAMERASESSION_H
 
-#include <QAbstractVideoSurface>
+#include <memory>
+
 #include <QCamera>
 #include <QCameraImageCapture>
-#include <QMap>
+#include <QObject>
 #include <QPointer>
 
-class GPhotoCameraWorker;
-class GPhotoFactory;
+class GPhotoCamera;
+class GPhotoController;
 
-class GPhotoCameraSession : public QObject
+class GPhotoCameraSession final : public QObject
 {
     Q_OBJECT
 public:
-    explicit GPhotoCameraSession(GPhotoFactory *factory, QObject *parent = 0);
-    ~GPhotoCameraSession();
+    explicit GPhotoCameraSession(std::weak_ptr<GPhotoController> controller, QObject *parent = nullptr);
+    ~GPhotoCameraSession() = default;
+
+    GPhotoCameraSession(GPhotoCameraSession&&) = delete;
+    GPhotoCameraSession& operator=(GPhotoCameraSession&&) = delete;
+
+    QList<QByteArray> cameraNames() const;
+    QByteArray defaultCameraName() const;
 
     // camera control
     QCamera::State state() const;
@@ -40,57 +47,59 @@ public:
     void setSurface(QAbstractVideoSurface *surface);
 
     // options control
-    QVariant parameter(const QString &name);
+    QVariant parameter(const QString &name) const;
     bool setParameter(const QString &name, const QVariant &value);
+    QVariantList parameterValues(const QString &name, QMetaType::Type valueType) const;
 
     void setCamera(int cameraIndex);
 
 signals:
     // camera control
-    void statusChanged(QCamera::Status);
-    void stateChanged(QCamera::State);
-    void error(int error, const QString &errorString);
-    void captureModeChanged(QCamera::CaptureModes);
+    void statusChanged(QCamera::Status status);
+    void stateChanged(QCamera::State state);
+    void error(int errorCode, const QString &errorString);
+    void captureModeChanged(QCamera::CaptureModes captureMode);
 
     // capture destination control
     void captureDestinationChanged(QCameraImageCapture::CaptureDestinations destination);
 
     // image capture control
-    void readyForCaptureChanged(bool);
-    void imageCaptured(int id, const QImage &preview);
     void imageAvailable(int id, const QVideoFrame &buffer);
+    void imageCaptured(int id, const QImage &preview);
+    void imageCaptureError(int id, int errorCode, const QString &errorString);
     void imageSaved(int id, const QString &fileName);
-    void imageCaptureError(int id, int error, const QString &errorString);
+    void readyForCaptureChanged(bool readyForCapture);
 
     // video probe control
     void videoFrameProbed(const QVideoFrame &frame);
 
 private slots:
-    void previewCaptured(const QImage &image);
-    void imageDataCaptured(int id, const QByteArray &imageData, const QString &fileName);
-
-    void workerStatusChanged(QCamera::Status);
+    void onCaptureModeChanged(int cameraIndex, QCamera::CaptureModes captureMode);
+    void onError(int cameraIndex, int errorCode, const QString &errorString);
+    void onImageCaptureError(int cameraIndex, int id, int errorCode, const QString &errorString);
+    void onImageCaptured(int cameraIndex, int id, const QByteArray &imageData,
+                         const QString &format, const QString &fileName);
+    void onPreviewCaptured(int cameraIndex, const QImage &image);
+    void onReadyForCaptureChanged(int cameraIndex, bool readyForCapture);
+    void onStateChanged(int cameraIndex, QCamera::State state);
+    void onStatusChanged(int cameraIndex, QCamera::Status status);
 
 private:
-    void stopViewFinder();
-    GPhotoCameraWorker* getWorker(int cameraIndex);
+    Q_DISABLE_COPY(GPhotoCameraSession)
 
-    GPhotoFactory *const m_factory;
-
-    QCamera::State m_state;
-    QCamera::Status m_status;
-    QCamera::CaptureModes m_captureMode;
-
-    QCameraImageCapture::CaptureDestinations m_captureDestination;
-
+    std::weak_ptr<GPhotoController> m_controller;
     QPointer<QAbstractVideoSurface> m_surface;
 
-    QThread *m_workerThread;
-    QMap<int, GPhotoCameraWorker*> m_workers;
-    GPhotoCameraWorker *m_currentWorker;
-    bool m_setStateRequired;
+    QCamera::CaptureModes m_captureMode = QCamera::CaptureStillImage;
+    QCamera::State m_state = QCamera::UnloadedState;
+    QCamera::Status m_status = QCamera::UnloadedStatus;
 
-    int m_lastImageCaptureId;
+    QCameraImageCapture::CaptureDestinations m_captureDestination = QCameraImageCapture::CaptureToBuffer
+                                                                    | QCameraImageCapture::CaptureToFile;
+
+    int m_cameraIndex = -1;
+    int m_captureId = 0;
+    bool m_readyForCapture = false;
 };
 
 #endif // GPHOTOCAMERASESSION_H

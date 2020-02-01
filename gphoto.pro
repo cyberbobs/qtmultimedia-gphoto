@@ -9,30 +9,36 @@ PLUGIN_CLASS_NAME=GPhotoServicePlugin
 
 #DESTDIR = $$[QT_INSTALL_PLUGINS]/mediaservice
 
-SOURCES += gphotoserviceplugin.cpp \
-    gphotomediaservice.cpp \
-    gphotocamerasession.cpp \
-    gphotocameracontrol.cpp \
-    gphotovideorenderercontrol.cpp \
-    gphotocameraworker.cpp \
-    gphotocameraimagecapturecontrol.cpp \
+SOURCES += \
+    gphotocamera.cpp \
     gphotocameracapturedestinationcontrol.cpp \
-    gphotovideoprobecontrol.cpp \
+    gphotocameracontrol.cpp \
+    gphotocameraimagecapturecontrol.cpp \
+    gphotocamerasession.cpp \
+    gphotocontroller.cpp \
     gphotoexposurecontrol.cpp \
+    gphotomediaservice.cpp \
+    gphotoserviceplugin.cpp \
     gphotovideoinputdevicecontrol.cpp \
-    gphotofactory.cpp
-HEADERS += gphotoserviceplugin.h \
-    gphotomediaservice.h \
-    gphotocamerasession.h \
-    gphotocameracontrol.h \
-    gphotovideorenderercontrol.h \
-    gphotocameraworker.h \
-    gphotocameraimagecapturecontrol.h \
+    gphotovideoprobecontrol.cpp \
+    gphotovideorenderercontrol.cpp \
+    gphotoworker.cpp
+
+HEADERS += \
+    gphotocamera.h \
     gphotocameracapturedestinationcontrol.h \
-    gphotovideoprobecontrol.h \
+    gphotocameracontrol.h \
+    gphotocameraimagecapturecontrol.h \
+    gphotocamerasession.h \
+    gphotocontroller.h \
     gphotoexposurecontrol.h \
+    gphotomediaservice.h \
+    gphotoserviceplugin.h \
     gphotovideoinputdevicecontrol.h \
-    gphotofactory.h
+    gphotovideoprobecontrol.h \
+    gphotovideorenderercontrol.h \
+    gphotoworker.h
+
 OTHER_FILES += gphoto.json
 LIBS += -lgphoto2
 

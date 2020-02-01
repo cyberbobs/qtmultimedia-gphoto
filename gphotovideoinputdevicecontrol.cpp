@@ -1,33 +1,25 @@
-#include "gphotovideoinputdevicecontrol.h"
 #include "gphotocamerasession.h"
-#include "gphotofactory.h"
+#include "gphotovideoinputdevicecontrol.h"
 
-#include <QDebug>
-
-
-GPhotoVideoInputDeviceControl::GPhotoVideoInputDeviceControl(GPhotoFactory *factory, GPhotoCameraSession *session, QObject *parent)
+GPhotoVideoInputDeviceControl::GPhotoVideoInputDeviceControl(GPhotoCameraSession *session, QObject *parent)
     : QVideoDeviceSelectorControl(parent)
-    , m_selectedDevice(-1)
-    , m_factory(factory)
     , m_session(session)
 {
 }
 
 int GPhotoVideoInputDeviceControl::deviceCount() const
 {
-    return m_factory->cameraDevices().size();
+    return m_session->cameraNames().size();
 }
 
 QString GPhotoVideoInputDeviceControl::deviceName(int index) const
 {
-    const QByteArrayList &devices = m_factory->cameraDevices().keys();
-    return QString::fromUtf8(devices.empty() ? "" : devices.at(index));
+    return m_session->cameraNames().value(index);
 }
 
 QString GPhotoVideoInputDeviceControl::deviceDescription(int index) const
 {
-    const QStringList &descriptions = m_factory->cameraDescriptions();
-    return descriptions.isEmpty() ? "" : descriptions.at(index);
+    return m_session->cameraNames().value(index);
 }
 
 int GPhotoVideoInputDeviceControl::defaultDevice() const

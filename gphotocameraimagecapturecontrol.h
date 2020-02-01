@@ -5,22 +5,28 @@
 
 class GPhotoCameraSession;
 
-class GPhotoCameraImageCaptureControl : public QCameraImageCaptureControl
+class GPhotoCameraImageCaptureControl final : public QCameraImageCaptureControl
 {
     Q_OBJECT
 public:
-    explicit GPhotoCameraImageCaptureControl(GPhotoCameraSession *session, QObject *parent = 0);
+    explicit GPhotoCameraImageCaptureControl(GPhotoCameraSession *session, QObject *parent = nullptr);
+    ~GPhotoCameraImageCaptureControl() = default;
 
-    QCameraImageCapture::DriveMode driveMode() const Q_DECL_OVERRIDE;
-    void setDriveMode(QCameraImageCapture::DriveMode driveMode) Q_DECL_OVERRIDE;
+    GPhotoCameraImageCaptureControl(GPhotoCameraImageCaptureControl&&) = delete;
+    GPhotoCameraImageCaptureControl& operator=(GPhotoCameraImageCaptureControl&&) = delete;
 
-    bool isReadyForCapture() const Q_DECL_OVERRIDE;
+    QCameraImageCapture::DriveMode driveMode() const final;
+    void setDriveMode(QCameraImageCapture::DriveMode driveMode) final;
 
-    int capture(const QString &fileName) Q_DECL_OVERRIDE;
-    void cancelCapture() Q_DECL_OVERRIDE;
+    bool isReadyForCapture() const final;
+
+    int capture(const QString &fileName) final;
+    void cancelCapture() final;
 
 private:
-    GPhotoCameraSession *m_session;
+    Q_DISABLE_COPY(GPhotoCameraImageCaptureControl)
+
+    GPhotoCameraSession *const m_session;
 };
 
 #endif // GPHOTOCAMERAIMAGECAPTURECONTROL_H

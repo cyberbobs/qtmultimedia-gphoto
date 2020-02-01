@@ -5,11 +5,13 @@ GPhotoCameraControl::GPhotoCameraControl(GPhotoCameraSession *session, QObject *
     : QCameraControl(parent)
     , m_session(session)
 {
-    connect(m_session, SIGNAL(statusChanged(QCamera::Status)), SIGNAL(statusChanged(QCamera::Status)));
-    connect(m_session, SIGNAL(stateChanged(QCamera::State)), SIGNAL(stateChanged(QCamera::State)));
-    connect(m_session, SIGNAL(error(int,QString)), SIGNAL(error(int,QString)));
+    using Session = GPhotoCameraSession;
+    using Control = GPhotoCameraControl;
 
-    connect(m_session, SIGNAL(captureModeChanged(QCamera::CaptureModes)), SIGNAL(captureModeChanged(QCamera::CaptureModes)));
+    connect(m_session, &Session::captureModeChanged, this, &Control::captureModeChanged);
+    connect(m_session, &Session::error, this, &Control::error);
+    connect(m_session, &Session::stateChanged, this, &Control::stateChanged);
+    connect(m_session, &Session::statusChanged, this, &Control::statusChanged);
 }
 
 QCamera::State GPhotoCameraControl::state() const
@@ -42,7 +44,10 @@ void GPhotoCameraControl::setCaptureMode(QCamera::CaptureModes captureMode)
     m_session->setCaptureMode(captureMode);
 }
 
-bool GPhotoCameraControl::canChangeProperty(QCameraControl::PropertyChangeType /*changeType*/, QCamera::Status /*status*/) const
+bool GPhotoCameraControl::canChangeProperty(QCameraControl::PropertyChangeType changeType, QCamera::Status status) const
 {
+    Q_UNUSED(changeType)
+    Q_UNUSED(status)
+
     return false;
 }
