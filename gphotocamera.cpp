@@ -114,7 +114,7 @@ void GPhotoCamera::capturePhoto(int id, const QString &fileName)
     // See https://github.com/gphoto/libgphoto2/issues/156 for RAW+JPEG fix
     auto ret = gp_camera_trigger_capture(m_camera.get(), m_context);
     if (ret < GP_OK) {
-        qWarning() << "Failed to capture frame:" << ret;
+        qWarning() << "GPhoto: Failed to capture frame:" << ret;
         emit imageCaptureError(id, QCameraImageCapture::ResourceError, tr("Failed to capture frame"));
         return;
     }
@@ -136,7 +136,7 @@ void GPhotoCamera::capturePhoto(int id, const QString &fileName)
                                           GP_FILE_TYPE_NORMAL, file, m_context);
 
             if (ret < GP_OK) {
-                qWarning() << "Failed to get file from camera:" << ret;
+                qWarning() << "GPhoto: Failed to get file from camera:" << ret;
                 emit imageCaptureError(id, QCameraImageCapture::ResourceError, tr("Failed to download file from camera"));
             } else {
                 const char* data = nullptr;
@@ -144,7 +144,7 @@ void GPhotoCamera::capturePhoto(int id, const QString &fileName)
 
                 ret = gp_file_get_data_and_size(file, &data, &size);
                 if (ret < GP_OK) {
-                    qWarning() << "Failed to get file data and size from camera:" << ret;
+                    qWarning() << "GPhoto: Failed to get file data and size from camera:" << ret;
                     emit imageCaptureError(id, QCameraImageCapture::ResourceError, tr("Failed to download file from camera"));
                 } else {
                     auto format = QFileInfo(event.fileName).suffix();
@@ -176,14 +176,14 @@ QVariant GPhotoCamera::parameter(const QString &name)
     CameraWidget *root = nullptr;
     auto ret = gp_camera_get_config(m_camera.get(), &root, m_context);
     if (ret < GP_OK) {
-        qWarning() << "Unable to get root option from gphoto while getting parameter" << qPrintable(name);
+        qWarning() << "GPhoto: Unable to get root option from gphoto while getting parameter" << qPrintable(name);
         return QVariant();
     }
 
     CameraWidget *option = nullptr;
     ret = gp_widget_get_child_by_name(root, qPrintable(name), &option);
     if (ret < GP_OK) {
-        qWarning() << "Unable to get config widget from gphoto";
+        qWarning() << "GPhoto: Unable to get config widget from gphoto";
         return QVariant();
     }
 
@@ -193,7 +193,7 @@ QVariant GPhotoCamera::parameter(const QString &name)
     CameraWidgetType type;
     ret = gp_widget_get_type(option, &type);
     if (ret < GP_OK) {
-        qWarning() << "Unable to get config widget type from gphoto";
+        qWarning() << "GPhoto: Unable to get config widget type from gphoto";
         return QVariant();
     }
 
@@ -201,7 +201,7 @@ QVariant GPhotoCamera::parameter(const QString &name)
         char *value;
         ret = gp_widget_get_value(option, &value);
         if (ret < GP_OK) {
-            qWarning() << "Unable to get value for option" << qPrintable(name) << "from gphoto";
+            qWarning() << "GPhoto: Unable to get value for option" << qPrintable(name) << "from gphoto";
             return QVariant();
         }
         return QString::fromLocal8Bit(value);
@@ -211,13 +211,13 @@ QVariant GPhotoCamera::parameter(const QString &name)
         auto value = 0;
         ret = gp_widget_get_value(option, &value);
         if (ret < GP_OK) {
-            qWarning() << "Unable to get value for option" << qPrintable(name) << "from gphoto";
+            qWarning() << "GPhoto: Unable to get value for option" << qPrintable(name) << "from gphoto";
             return QVariant();
         }
         return value != 0;
     }
 
-    qWarning() << "Options of type" << type << "are currently not supported";
+    qWarning() << "GPhoto: Options of type" << type << "are currently not supported";
     return QVariant();
 }
 
@@ -226,7 +226,7 @@ bool GPhotoCamera::setParameter(const QString &name, const QVariant &value)
     CameraWidget *root = nullptr;
     auto ret = gp_camera_get_config(m_camera.get(), &root, m_context);
     if (ret < GP_OK) {
-        qWarning() << "Unable to get root option from gphoto while setting parameter" << qPrintable(name);
+        qWarning() << "GPhoto: Unable to get root option from gphoto while setting parameter" << qPrintable(name);
         return false;
     }
 
@@ -234,7 +234,7 @@ bool GPhotoCamera::setParameter(const QString &name, const QVariant &value)
     CameraWidget *option = nullptr;
     ret = gp_widget_get_child_by_name(root, qPrintable(name), &option);
     if (ret < GP_OK) {
-        qWarning() << "Unable to get option" << qPrintable(name) << "from gphoto";
+        qWarning() << "GPhoto: Unable to get option" << qPrintable(name) << "from gphoto";
         return false;
     }
 
@@ -245,7 +245,7 @@ bool GPhotoCamera::setParameter(const QString &name, const QVariant &value)
     CameraWidgetType type;
     ret = gp_widget_get_type(option, &type);
     if (ret < GP_OK) {
-        qWarning() << "Unable to get option type from gphoto";
+        qWarning() << "GPhoto: Unable to get option type from gphoto";
         return false;
     }
 
@@ -255,14 +255,14 @@ bool GPhotoCamera::setParameter(const QString &name, const QVariant &value)
             ret = gp_widget_set_value(option, qPrintable(value.toString()));
 
             if (ret < GP_OK) {
-                qWarning() << "Failed to set value" << value << "to" << name << "option:" << ret;
+                qWarning() << "GPhoto: Failed to set value" << value << "to" << name << "option:" << ret;
                 return false;
             }
 
             ret = gp_camera_set_config(m_camera.get(), root, m_context);
 
             if (ret < GP_OK) {
-                qWarning() << "Failed to set config to camera";
+                qWarning() << "GPhoto: Failed to set config to camera";
                 return false;
             }
 
@@ -283,20 +283,20 @@ bool GPhotoCamera::setParameter(const QString &name, const QVariant &value)
                 auto ok = false;
                 auto choiceValue = QString::fromLocal8Bit(choice).replace(',', '.').toDouble(&ok);
                 if (!ok) {
-                    qDebug() << "Failed to convert value" << choice << "to double";
+                    qDebug() << "GPhoto: Failed to convert value" << choice << "to double";
                     continue;
                 }
 
                 if (qAbs(choiceValue - v) < 0.1) {
                     ret = gp_widget_set_value(option, choice);
                     if (ret < GP_OK) {
-                        qWarning() << "Failed to set value" << choice << "to" << name << "option:" << ret;
+                        qWarning() << "GPhoto: Failed to set value" << choice << "to" << name << "option:" << ret;
                         return false;
                     }
 
                     ret = gp_camera_set_config(m_camera.get(), root, m_context);
                     if (ret < GP_OK) {
-                        qWarning() << "Failed to set config to camera";
+                        qWarning() << "GPhoto: Failed to set config to camera";
                         return false;
                     }
 
@@ -305,7 +305,7 @@ bool GPhotoCamera::setParameter(const QString &name, const QVariant &value)
                 }
             }
 
-            qWarning() << "Can't find value matching to" << v << "for option" << name;
+            qWarning() << "GPhoto: Can't find value matching to" << v << "for option" << name;
             return false;
         }
 
@@ -326,13 +326,13 @@ bool GPhotoCamera::setParameter(const QString &name, const QVariant &value)
                 if ((ok && choiceValue == v) || (!ok && v == -1)) {
                     ret = gp_widget_set_value(option, choice);
                     if (ret < GP_OK) {
-                        qWarning() << "Failed to set value" << choice << "to" << name << "option:" << ret;
+                        qWarning() << "GPhoto: Failed to set value" << choice << "to" << name << "option:" << ret;
                         return false;
                     }
 
                     ret = gp_camera_set_config(m_camera.get(), root, m_context);
                     if (ret < GP_OK) {
-                        qWarning() << "Failed to set config to camera";
+                        qWarning() << "GPhoto: Failed to set config to camera";
                         return false;
                     }
 
@@ -341,11 +341,11 @@ bool GPhotoCamera::setParameter(const QString &name, const QVariant &value)
                 }
             }
 
-            qWarning() << "Can't find value matching to" << v << "for option" << name;
+            qWarning() << "GPhoto: Can't find value matching to" << v << "for option" << name;
             return false;
         }
 
-        qWarning() << "Failed to set value" << value << "to" << name << "option. Type" << value.type()
+        qWarning() << "GPhoto: Failed to set value" << value << "to" << name << "option. Type" << value.type()
                    << "is not supported";
         return false;
     }
@@ -355,20 +355,20 @@ bool GPhotoCamera::setParameter(const QString &name, const QVariant &value)
         if (value.canConvert<int>()) {
             v = value.toInt();
         } else {
-            qWarning() << "Failed to set value" << value << "to" << name << "option. Type" << value.type()
+            qWarning() << "GPhoto: Failed to set value" << value << "to" << name << "option. Type" << value.type()
                        << "is not supported";
             return false;
         }
 
         ret = gp_widget_set_value(option, &v);
         if (ret < GP_OK) {
-            qWarning() << "Failed to set value" << v << "to" << name << "option:" << ret;
+            qWarning() << "GPhoto: Failed to set value" << v << "to" << name << "option:" << ret;
             return false;
         }
 
         ret = gp_camera_set_config(m_camera.get(), root, m_context);
         if (ret < GP_OK) {
-            qWarning() << "Failed to set config to camera";
+            qWarning() << "GPhoto: Failed to set config to camera";
             return false;
         }
 
@@ -376,7 +376,7 @@ bool GPhotoCamera::setParameter(const QString &name, const QVariant &value)
         return true;
     }
 
-    qWarning() << "Options of type" << type << "are currently not supported";
+    qWarning() << "GPhoto: Options of type" << type << "are currently not supported";
     return false;
 }
 
@@ -385,7 +385,7 @@ QVariantList GPhotoCamera::parameterValues(const QString &name, QMetaType::Type 
     CameraWidget *root = nullptr;
     auto ret = gp_camera_get_config(m_camera.get(), &root, m_context);
     if (ret < GP_OK) {
-        qWarning() << "Unable to get root option from gphoto while setting parameter" << qPrintable(name);
+        qWarning() << "GPhoto: Unable to get root option from gphoto while setting parameter" << qPrintable(name);
         return {};
     }
 
@@ -393,7 +393,7 @@ QVariantList GPhotoCamera::parameterValues(const QString &name, QMetaType::Type 
     CameraWidget *option = nullptr;
     ret = gp_widget_get_child_by_name(root, qPrintable(name), &option);
     if (ret < GP_OK) {
-        qWarning() << "Unable to get option" << qPrintable(name) << "from gphoto";
+        qWarning() << "GPhoto: Unable to get option" << qPrintable(name) << "from gphoto";
         return {};
     }
 
@@ -404,7 +404,7 @@ QVariantList GPhotoCamera::parameterValues(const QString &name, QMetaType::Type 
     CameraWidgetType type;
     ret = gp_widget_get_type(option, &type);
     if (ret < GP_OK) {
-        qWarning() << "Unable to get option type from gphoto";
+        qWarning() << "GPhoto: Unable to get option type from gphoto";
         return {};
     }
 
@@ -417,7 +417,7 @@ QVariantList GPhotoCamera::parameterValues(const QString &name, QMetaType::Type 
 
         ret = gp_widget_get_range(option, &min, &max, &step);
         if (ret < GP_OK) {
-            qWarning() << "Unable to get widget range from gphoto";
+            qWarning() << "GPhoto: Unable to get widget range from gphoto";
             return {};
         }
 
@@ -442,14 +442,14 @@ QVariantList GPhotoCamera::parameterValues(const QString &name, QMetaType::Type 
                 // We use a workaround for flawed russian i18n of gphoto2 strings
                 value = QString(str).replace(',', '.').toDouble(&ok);
                 if (!ok) {
-                    qWarning() << "Failed to convert value" << choice << "to double";
+                    qWarning() << "GPhoto: Failed to convert value" << choice << "to double";
                     continue;
                 }
                 break;
             case QMetaType::Int:
                 value = str.toInt(&ok);
                 if (!ok) {
-                    qWarning() << "Failed to convert value" << choice << "to int";
+                    qWarning() << "GPhoto: Failed to convert value" << choice << "to int";
                     continue;
                 }
                 break;
@@ -457,7 +457,7 @@ QVariantList GPhotoCamera::parameterValues(const QString &name, QMetaType::Type 
                 value = str;
                 break;
             default:
-                qWarning() << "Failed to convert unsupported value" << choice;
+                qWarning() << "GPhoto: Failed to convert unsupported value" << choice;
                 continue;
             }
 
@@ -490,11 +490,11 @@ void GPhotoCamera::capturePreview()
         }
     }
 
-    qWarning() << "Failed retrieving preview" << ret;
+    qWarning() << "GPhoto: Failed retrieving preview" << ret;
     ++m_capturingFailCount;
 
     if (capturingFailLimit < m_capturingFailCount) {
-        qWarning() << "Closing camera because of capturing fail";
+        qWarning() << "GPhoto: Closing camera because of capturing fail";
         emit error(QCamera::CameraError, tr("Unable to capture frame"));
         closeCamera();
     }
@@ -588,7 +588,7 @@ void GPhotoCamera::setMirrorPosition(MirrorPosition pos)
     if (parameter(QLatin1String(viewfinderParameter)).isValid()) {
         auto up = (MirrorPosition::Up == pos);
         if (!setParameter(QLatin1String(viewfinderParameter), up))
-            qWarning() << "Failed to flap" << (up ? "up" : "down") << "camera mirror";
+            qWarning() << "GPhoto: Failed to flap" << (up ? "up" : "down") << "camera mirror";
     }
 }
 
@@ -602,7 +602,7 @@ bool GPhotoCamera::isReadyForCapture() const
 
 void GPhotoCamera::openCameraErrorHandle(const QString &errorText)
 {
-    qWarning() << qPrintable(errorText);
+    qWarning() << "GPhoto:" << qPrintable(errorText);
     setStatus(QCamera::UnavailableStatus);
     emit error(QCamera::CameraError, tr("Unable to open camera"));
 }
@@ -612,14 +612,14 @@ void GPhotoCamera::logOption(const char *name)
     CameraWidget *root;
     auto ret = gp_camera_get_config(m_camera.get(), &root, m_context);
     if (ret < GP_OK) {
-        qWarning() << "Unable to get root option from gphoto";
+        qWarning() << "GPhoto: Unable to get root option from gphoto";
         return;
     }
 
     CameraWidget *option;
     ret = gp_widget_get_child_by_name(root, name, &option);
     if (ret < GP_OK)
-        qWarning() << "Unable to get config widget from gphoto";
+        qWarning() << "GPhoto: Unable to get config widget from gphoto";
 
     // Unique pointer will free memory on exit
     auto optionPtr = CameraWidgetPtr(option, gp_widget_free);
@@ -627,17 +627,17 @@ void GPhotoCamera::logOption(const char *name)
     CameraWidgetType type;
     ret = gp_widget_get_type(option, &type);
     if (ret < GP_OK)
-        qWarning() << "Unable to get config widget type from gphoto";
+        qWarning() << "GPhoto: Unable to get config widget type from gphoto";
 
     char *value;
     ret = gp_widget_get_value(option, &value);
     if (ret < GP_OK)
-        qWarning() << "Unable to get widget value from gphoto";
+        qWarning() << "GPhoto: Unable to get widget value from gphoto";
 
-    qDebug() << "Option" << type << name << value;
+    qDebug() << "GPhoto: Option" << type << name << value;
     if (type == GP_WIDGET_RADIO) {
         auto count = gp_widget_count_choices(option);
-        qDebug() << "Choices count:" << count;
+        qDebug() << "GPhoto: Choices count:" << count;
 
         for (auto i = 0; i < count; ++i) {
             const char *choice = nullptr;

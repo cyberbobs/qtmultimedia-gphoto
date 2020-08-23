@@ -141,7 +141,7 @@ bool GPhotoExposureControl::setValue(QCameraExposureControl::ExposureParameter p
             }
         }
     } else {
-        qWarning() << "Currently unsupported parameter" << parameter << "change requested";
+        qWarning() << "GPhoto: Currently unsupported parameter" << parameter << "change requested";
     }
 
     return false;
@@ -200,7 +200,7 @@ QVariant GPhotoExposureControl::convertShutterSpeed(const QVariant &value)
 
     if (str.contains('/')) {
         if (1 < str.count('/')) {
-            qWarning().noquote() << "Failed to convert value" << value << "to double";
+            qWarning().noquote() << "GPhoto: Failed to convert value" << value << "to double";
             return {};
         }
 
@@ -208,13 +208,13 @@ QVariant GPhotoExposureControl::convertShutterSpeed(const QVariant &value)
 
         auto numerator = fraction.first().toInt(&ok);
         if (!ok) {
-            qWarning().noquote() << "Failed to convert value" << value << "to double";
+            qWarning().noquote() << "GPhoto: Failed to convert value" << value << "to double";
             return {};
         }
 
         auto denominator = fraction.last().toInt(&ok);
         if (!ok) {
-            qWarning().noquote() << "Failed to convert value" << value << "to double";
+            qWarning().noquote() << "GPhoto: Failed to convert value" << value << "to double";
             return {};
         }
 

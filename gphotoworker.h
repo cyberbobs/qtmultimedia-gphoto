@@ -55,8 +55,8 @@ signals:
 private:
     Q_DISABLE_COPY(GPhotoWorker)
 
-    CameraAbilities getCameraAbilities(const QByteArray &path, bool *ok = nullptr);
-    GPPortInfo getPortInfo(const QByteArray &path, bool *ok = nullptr);
+    CameraAbilities getCameraAbilities(int cameraIndex, bool *ok = nullptr);
+    GPPortInfo getPortInfo(int cameraIndex, bool *ok = nullptr);
     void updateDevices();
 
     GPContextPtr m_context;
@@ -64,8 +64,9 @@ private:
     CameraAbilitiesListPtr m_abilitiesList;
 
     QList<QByteArray> m_paths;
-    QMap<QByteArray, QByteArray> m_models;
-    QMap<QByteArray, QByteArray> m_names;
+    QList<QByteArray> m_models;
+    QList<QByteArray> m_names;
+
     std::map<QByteArray, std::unique_ptr<GPhotoCamera>> m_cameras;
     QByteArray m_defaultCameraName;
 

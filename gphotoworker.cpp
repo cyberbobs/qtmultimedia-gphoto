@@ -68,7 +68,7 @@ bool GPhotoWorker::init()
 QList<QByteArray> GPhotoWorker::cameraNames()
 {
     updateDevices();
-    return m_names.values();
+    return m_names;
 }
 
 QByteArray GPhotoWorker::defaultCameraName()
@@ -79,9 +79,9 @@ QByteArray GPhotoWorker::defaultCameraName()
 
 void GPhotoWorker::initCamera(int cameraIndex)
 {
-    const auto &path = m_paths.value(cameraIndex);
+    const auto &path = m_paths.at(cameraIndex);
     if (path.isEmpty()) {
-        qWarning() << "Unable to init camera with index" << cameraIndex;
+        qWarning() << "GPhoto: Unable to init camera with index" << cameraIndex;
         return;
     }
 
@@ -92,15 +92,15 @@ void GPhotoWorker::initCamera(int cameraIndex)
 
     auto ok = false;
 
-    const auto &abilities = getCameraAbilities(path, &ok);
+    const auto &abilities = getCameraAbilities(cameraIndex, &ok);
     if (!ok) {
-        qWarning() << "Unable to get abilities for camera with index" << cameraIndex;
+        qWarning() << "GPhoto: Unable to get abilities for camera with index" << cameraIndex;
         return;
     }
 
-    const auto &portInfo = getPortInfo(path, &ok);
+    const auto &portInfo = getPortInfo(cameraIndex, &ok);
     if (!ok) {
-        qWarning() << "Unable to get port info for camera with index" << cameraIndex;
+        qWarning() << "GPhoto: Unable to get port info for camera with index" << cameraIndex;
         return;
     }
 
@@ -110,70 +110,70 @@ void GPhotoWorker::initCamera(int cameraIndex)
     using Worker = GPhotoWorker;
     using namespace std::placeholders;
 
-    connect(camera, &Camera::captureModeChanged, this, std::bind(&Worker::captureModeChanged, this, cameraIndex, _1));
-    connect(camera, &Camera::error, this, std::bind(&Worker::error, this, cameraIndex, _1, _2));
-    connect(camera, &Camera::imageCaptureError, this, std::bind(&Worker::imageCaptureError, this, cameraIndex, _1, _2, _3));
-    connect(camera, &Camera::imageCaptured, this, std::bind(&Worker::imageCaptured, this, cameraIndex, _1, _2, _3, _4));
-    connect(camera, &Camera::previewCaptured, this, std::bind(&Worker::previewCaptured, this, cameraIndex, _1));
-    connect(camera, &Camera::readyForCaptureChanged, this, std::bind(&Worker::readyForCaptureChanged, this, cameraIndex, _1));
-    connect(camera, &Camera::stateChanged, this, std::bind(&Worker::stateChanged, this, cameraIndex, _1));
-    connect(camera, &Camera::statusChanged, this, std::bind(&Worker::statusChanged, this, cameraIndex, _1));
+    connect(camera, &Camera::captureModeChanged, camera, std::bind(&Worker::captureModeChanged, this, cameraIndex, _1));
+    connect(camera, &Camera::error, camera, std::bind(&Worker::error, this, cameraIndex, _1, _2));
+    connect(camera, &Camera::imageCaptureError, camera, std::bind(&Worker::imageCaptureError, this, cameraIndex, _1, _2, _3));
+    connect(camera, &Camera::imageCaptured, camera, std::bind(&Worker::imageCaptured, this, cameraIndex, _1, _2, _3, _4));
+    connect(camera, &Camera::previewCaptured, camera, std::bind(&Worker::previewCaptured, this, cameraIndex, _1));
+    connect(camera, &Camera::readyForCaptureChanged, camera, std::bind(&Worker::readyForCaptureChanged, this, cameraIndex, _1));
+    connect(camera, &Camera::stateChanged, camera, std::bind(&Worker::stateChanged, this, cameraIndex, _1));
+    connect(camera, &Camera::statusChanged, camera, std::bind(&Worker::statusChanged, this, cameraIndex, _1));
 
-    m_cameras.emplace(std::make_pair(path, camera));
+    m_cameras.emplace(path, camera);
 }
 
 void GPhotoWorker::setState(int cameraIndex, QCamera::State state)
 {
-    const auto &path = m_paths.value(cameraIndex);
+    const auto &path = m_paths.at(cameraIndex);
     if (!path.isEmpty() && m_cameras.cend() != m_cameras.find(path))
         m_cameras.at(path)->setState(state);
 }
 
 void GPhotoWorker::setCaptureMode(int cameraIndex, QCamera::CaptureModes captureMode)
 {
-    const auto &path = m_paths.value(cameraIndex);
+    const auto &path = m_paths.at(cameraIndex);
     if (!path.isEmpty() && m_cameras.cend() != m_cameras.find(path))
         m_cameras.at(path)->setCaptureMode(captureMode);
 }
 
 void GPhotoWorker::capturePhoto(int cameraIndex, int id, const QString &fileName)
 {
-    const auto &path = m_paths.value(cameraIndex);
+    const auto &path = m_paths.at(cameraIndex);
     if (!path.isEmpty() && m_cameras.cend() != m_cameras.find(path))
         m_cameras.at(path)->capturePhoto(id, fileName);
 }
 
 QVariant GPhotoWorker::parameter(int cameraIndex, const QString &name)
 {
-    const auto &path = m_paths.value(cameraIndex);
+    const auto &path = m_paths.at(cameraIndex);
     return (!path.isEmpty() && m_cameras.cend() != m_cameras.find(path))
            ? m_cameras.at(path)->parameter(name) : QVariant();
 }
 
 bool GPhotoWorker::setParameter(int cameraIndex, const QString &name, const QVariant &value)
 {
-    const auto &path = m_paths.value(cameraIndex);
+    const auto &path = m_paths.at(cameraIndex);
     return (!path.isEmpty() && m_cameras.cend() != m_cameras.find(path))
            ? m_cameras.at(path)->setParameter(name, value) : false;
 }
 
 QVariantList GPhotoWorker::parameterValues(int cameraIndex, const QString &name, QMetaType::Type valueType) const
 {
-    const auto &path = m_paths.value(cameraIndex);
+    const auto &path = m_paths.at(cameraIndex);
     return (!path.isEmpty() && m_cameras.cend() != m_cameras.find(path))
            ? m_cameras.at(path)->parameterValues(name, valueType) : QVariantList();
 }
 
-CameraAbilities GPhotoWorker::getCameraAbilities(const QByteArray &path, bool *ok)
+CameraAbilities GPhotoWorker::getCameraAbilities(int cameraIndex, bool *ok)
 {
     CameraAbilities abilities;
 
-    if (!m_models.contains(path)) {
+    if (m_paths.isEmpty()) {
         if (ok) *ok = false;
         return abilities;
     }
 
-    const auto &model = m_models.value(path);
+    const auto &model = m_models.at(cameraIndex);
     auto abilitiesIndex = gp_abilities_list_lookup_model(m_abilitiesList.get(), model.constData());
     if (abilitiesIndex < GP_OK) {
         qWarning() << "GPhoto: unable to find camera abilities";
@@ -192,10 +192,17 @@ CameraAbilities GPhotoWorker::getCameraAbilities(const QByteArray &path, bool *o
     return abilities;
 }
 
-GPPortInfo GPhotoWorker::getPortInfo(const QByteArray &path, bool *ok)
+GPPortInfo GPhotoWorker::getPortInfo(int cameraIndex, bool *ok)
 {
     GPPortInfo info;
     gp_port_info_new(&info);
+
+    if (m_paths.isEmpty()) {
+        if (ok) *ok = false;
+        return info;
+    }
+
+    const auto &path = m_paths.at(cameraIndex);
 
     auto port = gp_port_info_list_lookup_path(m_portInfoList.get(), path.constData());
     if (port < GP_OK) {
@@ -219,9 +226,12 @@ void GPhotoWorker::updateDevices()
 {
     QMutexLocker locker(&m_mutex);
 
+    QList<QByteArray> paths;
     if (m_cacheAgeTimer.isValid() && deviceCacheLifetime < m_cacheAgeTimer.elapsed()) {
-        m_paths.clear();
+        std::swap(m_paths, paths);
+        m_models.clear();
         m_names.clear();
+        m_cameras.clear();
         m_defaultCameraName.clear();
     }
 
@@ -242,13 +252,9 @@ void GPhotoWorker::updateDevices()
 
     auto cameraCount = gp_list_count(cameraList);
     if (cameraCount < 1) {
-        m_models.clear();
-        m_cameras.clear();
         return;
     }
 
-    QMap<QByteArray, QByteArray> prevModels;
-    std::swap(m_models, prevModels);
     QMap<QByteArray, int> nameIndexes;
     for (auto i = 0; i < cameraCount; ++i) {
         const char *gpPath = nullptr;
@@ -276,18 +282,15 @@ void GPhotoWorker::updateDevices()
 //        qDebug() << "GPhoto: found" << qPrintable(name) << "at path" << qPrintable(path);
 
         m_paths.append(path);
-        m_models.insert(path, model);
-        m_names.insert(path, name);
+        m_models.append(model);
+        m_names.append(name);
 
-        if (prevModels.contains(path)) {
-          const auto &prevModel = prevModels.value(path);
-          if (prevModel != model)
-              m_cameras.erase(m_cameras.find(path));
-        }
+        if (paths.contains(path))
+          initCamera(m_paths.size() - 1);
     }
 
     if (!m_paths.isEmpty()) {
-        m_defaultCameraName = m_names.value(m_paths.first());
+        m_defaultCameraName = m_names.first();
         m_cacheAgeTimer.restart();
     }
 }
