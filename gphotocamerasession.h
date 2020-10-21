@@ -8,6 +8,10 @@
 #include <QObject>
 #include <QPointer>
 
+QT_BEGIN_NAMESPACE
+class QCameraFocusControl;
+QT_END_NAMESPACE
+
 class GPhotoCamera;
 class GPhotoController;
 
@@ -16,7 +20,7 @@ class GPhotoCameraSession final : public QObject
     Q_OBJECT
 public:
     explicit GPhotoCameraSession(std::weak_ptr<GPhotoController> controller, QObject *parent = nullptr);
-    ~GPhotoCameraSession() = default;
+    ~GPhotoCameraSession();
 
     GPhotoCameraSession(GPhotoCameraSession&&) = delete;
     GPhotoCameraSession& operator=(GPhotoCameraSession&&) = delete;
@@ -50,6 +54,8 @@ public:
     QVariant parameter(const QString &name) const;
     bool setParameter(const QString &name, const QVariant &value);
     QVariantList parameterValues(const QString &name, QMetaType::Type valueType) const;
+
+    QCameraFocusControl* cameraFocusControl() const;
 
     void setCamera(int cameraIndex);
 
@@ -88,6 +94,7 @@ private:
     Q_DISABLE_COPY(GPhotoCameraSession)
 
     std::weak_ptr<GPhotoController> m_controller;
+    std::unique_ptr<QCameraFocusControl> m_cameraFocusControl;
     QPointer<QAbstractVideoSurface> m_surface;
 
     QCamera::CaptureModes m_captureMode = QCamera::CaptureStillImage;

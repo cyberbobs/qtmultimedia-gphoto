@@ -6,6 +6,7 @@
 
 namespace {
     constexpr auto capturingFailLimit = 10;
+    constexpr auto cancelautofocusParameter = "cancelautofocus";
     constexpr auto viewfinderParameter = "viewfinder";
     constexpr auto waitForEventTimeout = 10;
 }
@@ -585,6 +586,10 @@ void GPhotoCamera::stopViewFinder()
 
 void GPhotoCamera::setMirrorPosition(MirrorPosition pos)
 {
+    if (parameter(QLatin1String(cancelautofocusParameter)).isValid()) {
+        setParameter(QLatin1String(cancelautofocusParameter), true);
+    }
+
     if (parameter(QLatin1String(viewfinderParameter)).isValid()) {
         auto up = (MirrorPosition::Up == pos);
         if (!setParameter(QLatin1String(viewfinderParameter), up))

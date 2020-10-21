@@ -6,6 +6,7 @@
 #include <QVideoSurfaceFormat>
 
 #include "gphotocamera.h"
+#include "gphotocamerafocuscontrol.h"
 #include "gphotocamerasession.h"
 #include "gphotocontroller.h"
 
@@ -18,6 +19,7 @@ namespace {
 GPhotoCameraSession::GPhotoCameraSession(std::weak_ptr<GPhotoController> controller, QObject *parent)
     : QObject(parent)
     , m_controller(std::move(controller))
+    , m_cameraFocusControl(new GPhotoCameraFocusControl())
 {
     if (const auto &controller = m_controller.lock()) {
         using Controller = GPhotoController;
@@ -33,6 +35,8 @@ GPhotoCameraSession::GPhotoCameraSession(std::weak_ptr<GPhotoController> control
         connect(controller.get(), &Controller::statusChanged, this, &Session::onStatusChanged);
     }
 }
+
+GPhotoCameraSession::~GPhotoCameraSession() = default;
 
 QList<QByteArray> GPhotoCameraSession::cameraNames() const
 {
@@ -152,6 +156,11 @@ QVariantList GPhotoCameraSession::parameterValues(const QString &name, QMetaType
         return controller->parameterValues(m_cameraIndex, name, valueType);
 
     return {};
+}
+
+QCameraFocusControl *GPhotoCameraSession::cameraFocusControl() const
+{
+    return m_cameraFocusControl.get();
 }
 
 void GPhotoCameraSession::setCamera(int cameraIndex)

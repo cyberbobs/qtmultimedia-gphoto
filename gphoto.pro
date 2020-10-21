@@ -13,7 +13,9 @@ SOURCES += \
     gphotocamera.cpp \
     gphotocameracapturedestinationcontrol.cpp \
     gphotocameracontrol.cpp \
+    gphotocamerafocuscontrol.cpp \
     gphotocameraimagecapturecontrol.cpp \
+    gphotocameralockcontrol.cpp \
     gphotocamerasession.cpp \
     gphotocontroller.cpp \
     gphotoexposurecontrol.cpp \
@@ -28,7 +30,9 @@ HEADERS += \
     gphotocamera.h \
     gphotocameracapturedestinationcontrol.h \
     gphotocameracontrol.h \
+    gphotocamerafocuscontrol.h \
     gphotocameraimagecapturecontrol.h \
+    gphotocameralockcontrol.h \
     gphotocamerasession.h \
     gphotocontroller.h \
     gphotoexposurecontrol.h \
