@@ -50,15 +50,22 @@ QDebug operator<<(QDebug dbg, const CameraWidgetType &t)
 }
 
 GPhotoCamera::GPhotoCamera(GPContext *context, const CameraAbilities &abilities,
-                           const GPPortInfo &portInfo, QObject *parent)
+                           const GPPortInfo &portInfo, int index, QObject *parent)
     : QObject(parent)
     , m_context(context)
     , m_abilities(abilities)
     , m_portInfo(portInfo)
     , m_camera(nullptr, gp_camera_free)
     , m_file(nullptr, gp_file_free)
+    , m_index(index)
 {
     connect(this, &GPhotoCamera::previewCaptured, this, &GPhotoCamera::capturePreview, Qt::QueuedConnection);
+}
+
+void GPhotoCamera::setIndex(int index)
+{
+    if (m_index != index)
+        m_index = index;
 }
 
 GPhotoCamera::~GPhotoCamera()
@@ -98,14 +105,14 @@ void GPhotoCamera::setCaptureMode(QCamera::CaptureModes captureMode)
 {
     if (m_captureMode != captureMode) {
         m_captureMode = captureMode;
-        emit captureModeChanged(captureMode);
+        emit captureModeChanged(m_index, captureMode);
     }
 }
 
 void GPhotoCamera::capturePhoto(int id, const QString &fileName)
 {
     if (!isReadyForCapture()) {
-        emit imageCaptureError(id, QCameraImageCapture::NotReadyError, tr("Camera is not ready"));
+        emit imageCaptureError(m_index, id, QCameraImageCapture::NotReadyError, tr("Camera is not ready"));
         return;
     }
 
@@ -116,7 +123,7 @@ void GPhotoCamera::capturePhoto(int id, const QString &fileName)
     auto ret = gp_camera_trigger_capture(m_camera.get(), m_context);
     if (ret < GP_OK) {
         qWarning() << "GPhoto: Failed to capture frame:" << ret;
-        emit imageCaptureError(id, QCameraImageCapture::ResourceError, tr("Failed to capture frame"));
+        emit imageCaptureError(m_index, id, QCameraImageCapture::ResourceError, tr("Failed to capture frame"));
         return;
     }
 
@@ -138,7 +145,7 @@ void GPhotoCamera::capturePhoto(int id, const QString &fileName)
 
             if (ret < GP_OK) {
                 qWarning() << "GPhoto: Failed to get file from camera:" << ret;
-                emit imageCaptureError(id, QCameraImageCapture::ResourceError, tr("Failed to download file from camera"));
+                emit imageCaptureError(m_index, id, QCameraImageCapture::ResourceError, tr("Failed to download file from camera"));
             } else {
                 const char* data = nullptr;
                 unsigned long int size = 0;
@@ -146,20 +153,20 @@ void GPhotoCamera::capturePhoto(int id, const QString &fileName)
                 ret = gp_file_get_data_and_size(file, &data, &size);
                 if (ret < GP_OK) {
                     qWarning() << "GPhoto: Failed to get file data and size from camera:" << ret;
-                    emit imageCaptureError(id, QCameraImageCapture::ResourceError, tr("Failed to download file from camera"));
+                    emit imageCaptureError(m_index, id, QCameraImageCapture::ResourceError, tr("Failed to download file from camera"));
                 } else {
                     auto format = QFileInfo(event.fileName).suffix();
 
                     if (fileName.isEmpty()) {
                         // no proposal file name
-                        emit imageCaptured(id, QByteArray(data, int(size)), format, fileName);
+                        emit imageCaptured(m_index, id, QByteArray(data, int(size)), format, fileName);
                     } else {
                         if (QFileInfo(fileName).suffix() == format) {
                             // extension matches, so use proposed name:
-                            emit imageCaptured(id, QByteArray(data, int(size)), format, fileName);
+                            emit imageCaptured(m_index, id, QByteArray(data, int(size)), format, fileName);
                         } else {
                             // other extension, so use empty name
-                            emit imageCaptured(id, QByteArray(data, int(size)), format, QString());
+                            emit imageCaptured(m_index, id, QByteArray(data, int(size)), format, QString());
                         }
                     }
                 }
@@ -485,7 +492,7 @@ void GPhotoCamera::capturePreview()
             m_capturingFailCount = 0;
             if (!QThread::currentThread()->isInterruptionRequested()) {
                 auto image = QImage::fromData(QByteArray(data, int(size)));
-                emit previewCaptured(image);
+                emit previewCaptured(m_index, image);
             }
             return;
         }
@@ -496,7 +503,7 @@ void GPhotoCamera::capturePreview()
 
     if (capturingFailLimit < m_capturingFailCount) {
         qWarning() << "GPhoto: Closing camera because of capturing fail";
-        emit error(QCamera::CameraError, tr("Unable to capture frame"));
+        emit error(m_index, QCamera::CameraError, tr("Unable to capture frame"));
         closeCamera();
     }
 }
@@ -609,7 +616,7 @@ void GPhotoCamera::openCameraErrorHandle(const QString &errorText)
 {
     qWarning() << "GPhoto:" << qPrintable(errorText);
     setStatus(QCamera::UnavailableStatus);
-    emit error(QCamera::CameraError, tr("Unable to open camera"));
+    emit error(m_index, QCamera::CameraError, tr("Unable to open camera"));
 }
 
 void GPhotoCamera::logOption(const char *name)
@@ -705,18 +712,18 @@ void GPhotoCamera::setStatus(QCamera::Status status)
 
         if (QCamera::LoadedStatus == m_status) {
             m_state = QCamera::LoadedState;
-            emit stateChanged(m_state);
-            emit readyForCaptureChanged(isReadyForCapture());
+            emit stateChanged(m_index, m_state);
+            emit readyForCaptureChanged(m_index, isReadyForCapture());
         } else if (QCamera::ActiveStatus == m_status) {
             m_state = QCamera::ActiveState;
-            emit stateChanged(m_state);
-            emit readyForCaptureChanged(isReadyForCapture());
+            emit stateChanged(m_index, m_state);
+            emit readyForCaptureChanged(m_index, isReadyForCapture());
         } else if (QCamera::UnloadedStatus == m_status || QCamera::UnavailableStatus == m_status) {
             m_state = QCamera::UnloadedState;
-            emit stateChanged(m_state);
-            emit readyForCaptureChanged(isReadyForCapture());
+            emit stateChanged(m_index, m_state);
+            emit readyForCaptureChanged(m_index, isReadyForCapture());
         }
 
-        emit statusChanged(status);
+        emit statusChanged(m_index, status);
     }
 }

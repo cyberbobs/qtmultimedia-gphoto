@@ -171,7 +171,6 @@ void GPhotoCameraSession::setCamera(int cameraIndex)
             onCaptureModeChanged(cameraIndex, controller->captureMode(m_cameraIndex));
             onStateChanged(cameraIndex, controller->state(m_cameraIndex));
             onStatusChanged(cameraIndex, controller->status(m_cameraIndex));
-            controller->initCamera(cameraIndex);
         }
     }
 }

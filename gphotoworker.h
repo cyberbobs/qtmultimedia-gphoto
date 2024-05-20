@@ -32,7 +32,6 @@ public:
 
     Q_INVOKABLE QList<QByteArray> cameraNames();
     Q_INVOKABLE QByteArray defaultCameraName();
-    Q_INVOKABLE void initCamera(int cameraIndex);
 
     Q_INVOKABLE void setState(int cameraIndex, QCamera::State state);
     Q_INVOKABLE void setCaptureMode(int cameraIndex, QCamera::CaptureModes captureMode);
@@ -57,7 +56,9 @@ private:
 
     CameraAbilities getCameraAbilities(int cameraIndex, bool *ok = nullptr);
     GPPortInfo getPortInfo(int cameraIndex, bool *ok = nullptr);
+    bool isCameraIndexValid(int index) const;
     void updateDevices();
+    void setupCamera(const QByteArray &path);
 
     GPContextPtr m_context;
     GPPortInfoListPtr m_portInfoList;

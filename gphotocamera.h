@@ -39,12 +39,13 @@ public:
     };
 
     GPhotoCamera(GPContext *context, const CameraAbilities &abilities,
-                 const GPPortInfo &portInfo, QObject *parent = nullptr);
+                 const GPPortInfo &portInfo, int index, QObject *parent = nullptr);
     ~GPhotoCamera();
 
     GPhotoCamera(GPhotoCamera&&) = delete;
     GPhotoCamera&operator=(GPhotoCamera&&) = delete;
 
+    void setIndex(int index);
     void setState(QCamera::State state);
     void setCaptureMode(QCamera::CaptureModes captureMode);
     void capturePhoto(int id, const QString &fileName);
@@ -54,14 +55,14 @@ public:
     QVariantList parameterValues(const QString &name, QMetaType::Type valueType);
 
 signals:
-    void captureModeChanged(QCamera::CaptureModes captureMode);
-    void error(int errorCode, const QString &errorString);
-    void imageCaptured(int id, const QByteArray &imageData, const QString &format, const QString &fileName);
-    void imageCaptureError(int id, int errorCode, const QString &errorString);
-    void previewCaptured(const QImage &image);
-    void readyForCaptureChanged(bool readyForCapture);
-    void stateChanged(QCamera::State state);
-    void statusChanged(QCamera::Status status);
+    void captureModeChanged(int index, QCamera::CaptureModes captureMode);
+    void error(int index, int errorCode, const QString &errorString);
+    void imageCaptured(int index, int id, const QByteArray &imageData, const QString &format, const QString &fileName);
+    void imageCaptureError(int index, int id, int errorCode, const QString &errorString);
+    void previewCaptured(int index, const QImage &image);
+    void readyForCaptureChanged(int index, bool readyForCapture);
+    void stateChanged(int index, QCamera::State state);
+    void statusChanged(int index, QCamera::Status status);
 
 private slots:
     void capturePreview();
@@ -97,6 +98,7 @@ private:
     QCamera::Status m_status = QCamera::UnloadedStatus;
     QCamera::CaptureModes m_captureMode = QCamera::CaptureStillImage;
     int m_capturingFailCount = 0;
+    int m_index = 0;
 };
 
 #endif // GPHOTOCAMERA_H

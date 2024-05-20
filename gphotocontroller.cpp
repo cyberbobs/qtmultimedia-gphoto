@@ -65,11 +65,6 @@ QByteArray GPhotoController::defaultCameraName() const
     return result;
 }
 
-void GPhotoController::initCamera(int cameraIndex) const
-{
-    QMetaObject::invokeMethod(m_worker.get(), "initCamera", Qt::QueuedConnection, Q_ARG(int, cameraIndex));
-}
-
 void GPhotoController::capturePhoto(int cameraIndex, int id, const QString &fileName) const
 {
     QMetaObject::invokeMethod(m_worker.get(), "capturePhoto", Qt::QueuedConnection,

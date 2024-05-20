@@ -28,7 +28,6 @@ public:
     QList<QByteArray> cameraNames() const;
     QByteArray defaultCameraName() const;
 
-    void initCamera(int cameraIndex) const;
     void capturePhoto(int cameraIndex, int id, const QString &fileName) const;
 
     QCamera::CaptureModes captureMode(int cameraIndex) const;
