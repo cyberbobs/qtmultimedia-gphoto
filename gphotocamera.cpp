@@ -1,6 +1,7 @@
 #include <QCameraImageCapture>
 #include <QThread>
 #include <QFileInfo>
+#include <QMetaObject>
 
 #include "gphotocamera.h"
 
@@ -60,6 +61,9 @@ GPhotoCamera::GPhotoCamera(GPContext *context, const CameraAbilities &abilities,
     , m_index(index)
 {
     connect(this, &GPhotoCamera::previewCaptured, this, &GPhotoCamera::capturePreview, Qt::QueuedConnection);
+
+    m_aliveTimer.setInterval(1000 * 60); //trigger parameter "capture" for canon cameras every minute
+    m_aliveTimer.setSingleShot(true);
 }
 
 void GPhotoCamera::setIndex(int index)
@@ -111,6 +115,13 @@ void GPhotoCamera::setCaptureMode(QCamera::CaptureModes captureMode)
 
 void GPhotoCamera::capturePhoto(int id, const QString &fileName)
 {
+    QVariant captureParameter = parameter("capture");
+    if(captureParameter.isValid())
+    {
+        // restart alive timer for Canon cameras.
+        QMetaObject::invokeMethod(&m_aliveTimer, "start", Qt::QueuedConnection);
+    }
+
     if (!isReadyForCapture()) {
         emit imageCaptureError(m_index, id, QCameraImageCapture::NotReadyError, tr("Camera is not ready"));
         return;
@@ -483,6 +494,22 @@ void GPhotoCamera::capturePreview()
 
     gp_file_clean(m_file.get());
 
+    // check if timer has timed out.
+    if(!m_aliveTimer.isActive())
+    {
+        // If so, than set "capture" parameter for keeping Canon cameras alive.
+        QVariant captureParameter = parameter("capture");
+        if(captureParameter.isValid())
+        {
+            if(captureParameter.toBool() == false)
+            {
+                setParameter("capture", true);
+                qWarning() << "Set parameter 'capture' to 'true'";
+            }
+        }
+        QMetaObject::invokeMethod(&m_aliveTimer, "start", Qt::QueuedConnection);
+    }
+
     auto ret = gp_camera_capture_preview(m_camera.get(), m_file.get(), m_context);
     if (GP_OK == ret) {
         const char *data = nullptr;
@@ -536,6 +563,17 @@ void GPhotoCamera::openCamera()
     if (ret < GP_OK) {
         openCameraErrorHandle(QLatin1String("Unable to set port info for camera"));
         return;
+    }
+
+    // disable power save for Canon cameras
+    if(parameter("capture").isValid())
+    {
+        if(!setParameter("capture", true))
+        {
+            qWarning() << "Unable to set option 'capture' to 'true'";
+        }
+
+        QMetaObject::invokeMethod(&m_aliveTimer, "start", Qt::QueuedConnection);
     }
 
     CameraFile *file;
