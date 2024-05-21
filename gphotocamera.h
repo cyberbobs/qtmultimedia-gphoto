@@ -5,6 +5,7 @@
 
 #include <QCamera>
 #include <QObject>
+#include <QTimer>
 
 #include <gphoto2/gphoto2-abilities-list.h>
 #include <gphoto2/gphoto2-camera.h>
@@ -99,6 +100,9 @@ private:
     QCamera::CaptureModes m_captureMode = QCamera::CaptureStillImage;
     int m_capturingFailCount = 0;
     int m_index = 0;
+
+    // Alive timer for Canon cameras. Canon cameras will go into standby unless not kept alive.
+    QTimer m_aliveTimer;
 };
 
 #endif // GPHOTOCAMERA_H
